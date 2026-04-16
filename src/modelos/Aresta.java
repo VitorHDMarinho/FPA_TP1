@@ -4,13 +4,12 @@ package modelos;
  * Representa uma aresta em um grafo ponderado.
  * Implementa Comparable para ordenação por peso (essencial para Kruskal).
  * 
- * @author FPAA - Trabalho Prático 1
  */
 public class Aresta implements Comparable<Aresta> {
     
-    private final int origem;
-    private final int destino;
-    private final int peso;
+    private int origem;
+    private int destino;
+    private int peso;
     
     /**
      * Construtor.
