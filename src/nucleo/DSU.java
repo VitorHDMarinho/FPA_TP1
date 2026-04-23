@@ -1,5 +1,7 @@
 package nucleo;
 
+import utilitarios.ColetorMetricas;
+
 /**
  * Classe abstrata que define o contrato para implementações da estrutura
  * Disjoint Set Union (Union-Find).
@@ -23,6 +25,8 @@ public abstract class DSU {
     protected int[] rank;
     
     protected int n;
+
+    protected ColetorMetricas coletor;
 
 
         /**
@@ -147,6 +151,10 @@ public abstract class DSU {
                     ". Deve estar entre 0 e " + (n - 1));
         }
     }
+
+    public void setColetor(ColetorMetricas coletor) {
+    this.coletor = coletor;
+}
     
     
     /**

@@ -1,31 +1,21 @@
 package nucleo;
 
-/**
- * Implementação do DSU com Union by Rank.
- * Une as árvores pela altura (rank) para manter a árvore balanceada.
- * 
- * Complexidade:
- * - Find: O(log n)
- * - Union: O(log n)
- * 
- */
 public class DSURank extends DSU {
     
-    public DSURank(int n) {
-        super(n);
-    }
-    
-    public DSURank(){
-        super();
-    }
+    public DSURank(int n) { super(n); }
+    public DSURank() { super(); }
     
     @Override
     public int find(int i) {
         validarIndice(i);
-        if (pai[i] != i) {
-            return find(pai[i]);
+        if (coletor != null) coletor.registrarFind();
+        
+        int curr = i;
+        while (pai[curr] != curr) {
+            if (coletor != null) coletor.registrarLeituraPai();
+            curr = pai[curr];
         }
-        return i;
+        return curr;
     }
     
     @Override
@@ -34,15 +24,25 @@ public class DSURank extends DSU {
         int raizJ = find(j);
         
         if (raizI != raizJ) {
-            // anexa a árvore menor à maior
+            if (coletor != null) {
+                coletor.registrarUnion();
+                coletor.registrarLeituraRank(); // Lendo ranks para comparar
+                coletor.registrarLeituraRank();
+            }
+            
             if (rank[raizI] < rank[raizJ]) {
                 pai[raizI] = raizJ;
+                if (coletor != null) coletor.registrarEscritaPai();
             } else if (rank[raizI] > rank[raizJ]) {
                 pai[raizJ] = raizI;
+                if (coletor != null) coletor.registrarEscritaPai();
             } else {
-                // uma vira filha da outra e rank aumenta
                 pai[raizJ] = raizI;
                 rank[raizI]++;
+                if (coletor != null) {
+                    coletor.registrarEscritaPai();
+                    coletor.registrarEscritaRank();
+                }
             }
         }
     }

@@ -14,20 +14,16 @@ import algoritmos.AlgoritmoKruskal;
 
 /**
  * Classe principal para execução dos experimentos.
- * 
- * Realiza testes comparativos entre as três implementações de DSU:
+ * * Realiza testes comparativos entre as três implementações de DSU:
  * - Ingênua (Naive)
  * - Union by Rank
  * - Tarjan (Rank + Path Compression)
- * 
- * Os testes são realizados com:
+ * * Os testes são realizados com:
  * - Grafos conexos
  * - Grafos desconexos
- * 
- * Os resultados são salvos em arquivos CSV para análise e geração de gráficos.
+ * * Os resultados são salvos em arquivos CSV para análise e geração de gráficos.
  * As entradas (grafos gerados) também são salvas para reprodutibilidade.
- * 
- * @author FPAA - Trabalho Prático 1
+ * * @author FPAA - Trabalho Prático 1
  */
 public class Principal {
     
@@ -48,8 +44,8 @@ public class Principal {
         // Listas para armazenar os resultados
         List<String> resultadosCSV = new ArrayList<>();
         
-        // Cabeçalho do CSV
-        resultadosCSV.add("tipo_grafo,tipo_dsu,n_vertices,n_arestas,repeticao,tempo_ms,custo_mst");
+        // Cabeçalho do CSV (incluindo as métricas do coletor)
+        resultadosCSV.add("tipo_grafo,tipo_dsu,n_vertices,n_arestas,repeticao,tempo_ms,custo_mst," + ColetorMetricas.getCSVCabecalho());
         
         // Para cada tamanho de grafo
         for (int n : TAMANHOS_VERTICES) {
@@ -98,8 +94,7 @@ public class Principal {
     
     /**
      * Testa as três implementações de DSU com um grafo.
-     * 
-     * @param grafo      grafo a ser processado
+     * * @param grafo      grafo a ser processado
      * @param tipoGrafo  "conexo" ou "desconexo"
      * @param resultados lista para acumular os resultados
      */
@@ -108,72 +103,39 @@ public class Principal {
         int m = grafo.getNumArestas();
         
         // Testa DSU Naive
-        System.out.println("  Testando DSU NAIVE...");
-        for (int rep = 1; rep <= REPETICOES; rep++) {
-            DSUNaive dsu = new DSUNaive();
-            dsu.reset(n);  // Inicializa com n elementos
-            
-            ColetorMetricas coletor = new ColetorMetricas();
-            
-            coletor.iniciarTempo();
-            int custoMST = AlgoritmoKruskal.encontrarMST(grafo, dsu);
-            coletor.pararTempo();
-            
-            String linha = String.format("%s,naive,%d,%d,%d,%.3f,%d",
-                    tipoGrafo, n, m, rep,
-                    coletor.getTempoMilissegundos(),
-                    custoMST);
-            
-            resultados.add(linha);
-            System.out.printf("    Rep %d: tempo = %.3f ms, custo = %d\n", 
-                    rep, coletor.getTempoMilissegundos(), custoMST);
-        }
+        executarTeste(grafo, new DSUNaive(), "naive", tipoGrafo, n, m, resultados);
         
         // Testa DSU Rank
-        System.out.println("  Testando DSU RANK...");
-        for (int rep = 1; rep <= REPETICOES; rep++) {
-            DSURank dsu = new DSURank();
-            dsu.reset(n);
-            
-            ColetorMetricas coletor = new ColetorMetricas();
-            
-            coletor.iniciarTempo();
-            int custoMST = AlgoritmoKruskal.encontrarMST(grafo, dsu);
-            coletor.pararTempo();
-            
-            String linha = String.format("%s,rank,%d,%d,%d,%.3f,%d",
-                    tipoGrafo, n, m, rep,
-                    coletor.getTempoMilissegundos(),
-                    custoMST);
-            
-            resultados.add(linha);
-            System.out.printf("    Rep %d: tempo = %.3f ms, custo = %d\n", 
-                    rep, coletor.getTempoMilissegundos(), custoMST);
-        }
+        executarTeste(grafo, new DSURank(), "rank", tipoGrafo, n, m, resultados);
         
         // Testa DSU Tarjan
-        System.out.println("  Testando DSU TARJAN...");
+        executarTeste(grafo, new DSUTarjan(), "tarjan", tipoGrafo, n, m, resultados);
+        
+        System.out.println();
+    }
+
+    /**
+     * Auxiliar para executar o teste e coletar métricas.
+     */
+    private static void executarTeste(Grafo grafo, DSU dsu, String nomeDsu, String tipoGrafo, int n, int m, List<String> resultados) {
+        System.out.println("  Testando DSU " + nomeDsu.toUpperCase() + "...");
         for (int rep = 1; rep <= REPETICOES; rep++) {
-            DSUTarjan dsu = new DSUTarjan();
             dsu.reset(n);
-            
             ColetorMetricas coletor = new ColetorMetricas();
+            dsu.setColetor(coletor); // Conecta o coletor ao DSU
             
             coletor.iniciarTempo();
             int custoMST = AlgoritmoKruskal.encontrarMST(grafo, dsu);
             coletor.pararTempo();
             
-            String linha = String.format("%s,tarjan,%d,%d,%d,%.3f,%d",
-                    tipoGrafo, n, m, rep,
-                    coletor.getTempoMilissegundos(),
-                    custoMST);
+            String linha = String.format("%s,%s,%d,%d,%d,%.3f,%d,%s",
+                    tipoGrafo, nomeDsu, n, m, rep, 
+                    coletor.getTempoMilissegundos(), custoMST,
+                    coletor.toCSV());
             
             resultados.add(linha);
-            System.out.printf("    Rep %d: tempo = %.3f ms, custo = %d\n", 
-                    rep, coletor.getTempoMilissegundos(), custoMST);
+            System.out.printf("    Rep %d: tempo = %.3f ms, custo = %d\n", rep, coletor.getTempoMilissegundos(), custoMST);
         }
-        
-        System.out.println();
     }
     
     /**
@@ -182,15 +144,13 @@ public class Principal {
      * u v peso
      * u v peso
      * ...
-     * 
-     * @param grafo     grafo a ser salvo
+     * * @param grafo     grafo a ser salvo
      * @param n         número de vértices
      * @param m         número de arestas
      * @param tipo      "conexo" ou "desconexo"
      */
     private static void salvarGrafo(Grafo grafo, int n, int m, String tipo) {
         String caminho = String.format("dados/entradas/grafo_%s_n%d_m%d.txt", tipo, n, m);
-        
         try (PrintWriter writer = new PrintWriter(new FileWriter(caminho))) {
             // Escreve cabeçalho com número de vértices e arestas
             writer.printf("%d %d\n", n, m);
@@ -203,7 +163,6 @@ public class Principal {
                         aresta.getDestino(), 
                         aresta.getPeso());
             }
-            
             System.out.println("  Grafo salvo em: " + caminho);
         } catch (Exception e) {
             System.err.println("  Erro ao salvar grafo: " + e.getMessage());
@@ -212,8 +171,7 @@ public class Principal {
     
     /**
      * Salva os resultados em um arquivo CSV.
-     * 
-     * @param resultados lista de linhas do CSV
+     * * @param resultados lista de linhas do CSV
      * @param caminho    caminho do arquivo
      */
     private static void salvarResultados(List<String> resultados, String caminho) {
